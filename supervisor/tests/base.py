@@ -523,7 +523,7 @@ class DummyPConfig:
                  stderr_logfile_backups=0, stderr_logfile_maxbytes=0,
                  stderr_syslog=False,
                  redirect_stderr=False,
-                 stopsignal=None, stopwaitsecs=10, stopasgroup=False, killasgroup=False,
+                 stopsignal=None, stopwaitsecs=10, stopretrysecs=10, stopasgroup=False, killasgroup=False,
                  exitcodes=(0,), environment=None, serverurl=None):
         self.options = options
         self.name = name
@@ -552,6 +552,7 @@ class DummyPConfig:
             stopsignal = signal.SIGTERM
         self.stopsignal = stopsignal
         self.stopwaitsecs = stopwaitsecs
+        self.stopretrysecs = stopretrysecs
         self.stopasgroup = stopasgroup
         self.killasgroup = killasgroup
         self.exitcodes = exitcodes

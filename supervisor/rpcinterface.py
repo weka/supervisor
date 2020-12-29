@@ -581,6 +581,7 @@ class SupervisorNamespaceRPCInterface:
                      'stdout_syslog': pconfig.stdout_syslog,
                      'stopsignal': int(pconfig.stopsignal), # enum on py3
                      'stopwaitsecs': pconfig.stopwaitsecs,
+                     'stopretrysecs': pconfig.stopretrysecs,
                      'stderr_capture_maxbytes': pconfig.stderr_capture_maxbytes,
                      'stderr_events_enabled': pconfig.stderr_events_enabled,
                      'stderr_logfile': pconfig.stderr_logfile,

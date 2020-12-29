@@ -46,6 +46,7 @@ class Subprocess(object):
     laststop = 0  # Last time the subprocess was stopped; 0 if never
     laststopreport = 0 # Last time "waiting for x to stop" logged, to throttle
     delay = 0 # If nonzero, delay starting or killing until this time
+    delaystoppingretry = 0 # Last time we sent a stop signal to the process; 0 if never
     administrative_stop = False # true if process has been stopped by an admin
     system_stop = False # true if process has been stopped by the system
     killing = False # true if we are trying to kill this process
@@ -373,6 +374,8 @@ class Subprocess(object):
                 self.laststopreport = test_time;
             if self.delay > 0 and test_time < (self.delay - self.config.stopwaitsecs):
                 self.delay = test_time + self.config.stopwaitsecs
+            if self.delaystoppingretry > 0 and test_time < (self.delaystoppingretry - self.config.stopretrysecs):
+                self.delaystoppingretry = test_time + self.config.stopretrysecs
         elif self.state == ProcessStates.BACKOFF:
             if self.delay > 0 and test_time < (self.delay - self.backoff):
                 self.delay = test_time + self.backoff
@@ -397,6 +400,7 @@ class Subprocess(object):
 
     def give_up(self):
         self.delay = 0
+        self.delaystoppingretry = 0
         self.backoff = 0
         self.system_stop = True
         self._assertInState(ProcessStates.BACKOFF)
@@ -449,7 +453,10 @@ class Subprocess(object):
 
         # RUNNING/STARTING/STOPPING -> STOPPING
         self.killing = True
-        self.delay = now + self.config.stopwaitsecs
+        if not self.delay:
+            self.delay = now + self.config.stopwaitsecs
+        self.delaystoppingretry = now + min(self.config.stopretrysecs, self.config.stopwaitsecs)
+
         # we will already be in the STOPPING state if we're doing a
         # SIGKILL as a result of overrunning stopwaitsecs
         self._assertInState(ProcessStates.RUNNING,
@@ -683,6 +690,7 @@ class Subprocess(object):
 
         elif state == ProcessStates.STOPPING:
             time_left = self.delay - now
+            time_left_for_retry = self.delaystoppingretry - now
             if time_left <= 0:
                 # kill processes which are taking too long to stop with a final
                 # sigkill.  if this doesn't kill it, the process will be stuck
@@ -691,6 +699,14 @@ class Subprocess(object):
                     'killing \'%s\' (%s) with SIGKILL' % (processname,
                                                           self.pid))
                 self.kill(signal.SIGKILL)
+            elif time_left_for_retry <= 0:
+                self.config.options.logger.warn(
+                    'killing \'%s\' (%s) with %s (retry)' % (processname,
+                                                             self.pid,
+                                                             signame(self.config.stopsignal)))
+                self.delaystoppingretry = min(self.config.stopretrysecs, self.config.stopwaitsecs)
+                self.kill(self.config.stopsignal)
+
 
 class FastCGISubprocess(Subprocess):
     """Extends Subprocess class to handle FastCGI subprocesses"""
