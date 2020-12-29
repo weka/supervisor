@@ -488,6 +488,7 @@ class ServerOptionsTests(unittest.TestCase):
         stdout_logfile=/tmp/cat.log
         stopsignal=KILL
         stopwaitsecs=5
+        stopretrysecs=5
         startsecs=5
         startretries=10
         directory=/tmp
@@ -575,6 +576,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc1.stdout_logfile, '/tmp/cat.log')
         self.assertEqual(proc1.stopsignal, signal.SIGKILL)
         self.assertEqual(proc1.stopwaitsecs, 5)
+        self.assertEqual(proc1.stopretrysecs, 5)
         self.assertEqual(proc1.stopasgroup, False)
         self.assertEqual(proc1.killasgroup, False)
         self.assertEqual(proc1.stdout_logfile_maxbytes,
@@ -1651,6 +1653,7 @@ class ServerOptionsTests(unittest.TestCase):
         stdout_events_enabled = true
         stopsignal = KILL
         stopwaitsecs = 100
+        stopretrysecs = 200
         killasgroup = true
         exitcodes = 1,4
         redirect_stderr = false
@@ -1679,6 +1682,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(pconfig.stopasgroup, False)
         self.assertEqual(pconfig.killasgroup, True)
         self.assertEqual(pconfig.stopwaitsecs, 100)
+        self.assertEqual(pconfig.stopretrysecs, 200)
         self.assertEqual(pconfig.exitcodes, [1,4])
         self.assertEqual(pconfig.redirect_stderr, False)
         self.assertEqual(pconfig.environment,
@@ -1896,6 +1900,7 @@ class ServerOptionsTests(unittest.TestCase):
         stdout_logfile_backups = %(ENV_CAT1_STDOUT_LOGFILE_BACKUPS)s
         stopsignal=%(ENV_CAT1_STOPSIGNAL)s
         stopwaitsecs=%(ENV_CAT1_STOPWAIT)s
+        stopretrysecs=%(ENV_CAT1_STOPRETRY)s
         startsecs=%(ENV_CAT1_STARTWAIT)s
         startretries=%(ENV_CAT1_STARTRETRIES)s
         directory=%(ENV_CAT1_DIR)s
@@ -1930,6 +1935,7 @@ class ServerOptionsTests(unittest.TestCase):
             'ENV_CAT1_STDOUT_LOGFILE_BACKUPS': '2',
             'ENV_CAT1_STOPSIGNAL': 'KILL',
             'ENV_CAT1_STOPWAIT': '5',
+            'ENV_CAT1_STOPRETRY': '10',
             'ENV_CAT1_STARTWAIT': '5',
             'ENV_CAT1_STARTRETRIES': '10',
             'ENV_CAT1_DIR': '/tmp',
@@ -1981,6 +1987,7 @@ class ServerOptionsTests(unittest.TestCase):
         self.assertEqual(proc1.stdout_logfile, '/tmp/cat.log')
         self.assertEqual(proc1.stopsignal, signal.SIGKILL)
         self.assertEqual(proc1.stopwaitsecs, 5)
+        self.assertEqual(proc1.stopretrysecs, 10)
         self.assertEqual(proc1.stopasgroup, False)
         self.assertEqual(proc1.killasgroup, False)
         self.assertEqual(proc1.stdout_logfile_maxbytes,
@@ -3350,7 +3357,7 @@ class ProcessConfigTests(unittest.TestCase):
                      'stdout_events_enabled', 'stdout_syslog',
                      'stderr_logfile', 'stderr_capture_maxbytes',
                      'stderr_events_enabled', 'stderr_syslog',
-                     'stopsignal', 'stopwaitsecs', 'stopasgroup',
+                     'stopsignal', 'stopwaitsecs', 'stopretrysecs', 'stopasgroup',
                      'killasgroup', 'exitcodes', 'redirect_stderr',
                      'environment'):
             defaults[name] = name
@@ -3448,7 +3455,7 @@ class EventListenerConfigTests(unittest.TestCase):
                      'stdout_events_enabled', 'stdout_syslog',
                      'stderr_logfile', 'stderr_capture_maxbytes',
                      'stderr_events_enabled', 'stderr_syslog',
-                     'stopsignal', 'stopwaitsecs', 'stopasgroup',
+                     'stopsignal', 'stopwaitsecs', 'stopretrysecs', 'stopasgroup',
                      'killasgroup', 'exitcodes', 'redirect_stderr',
                      'environment'):
             defaults[name] = name
@@ -3496,7 +3503,7 @@ class FastCGIProcessConfigTests(unittest.TestCase):
                      'stdout_events_enabled', 'stdout_syslog',
                      'stderr_logfile', 'stderr_capture_maxbytes',
                      'stderr_events_enabled', 'stderr_syslog',
-                     'stopsignal', 'stopwaitsecs', 'stopasgroup',
+                     'stopsignal', 'stopwaitsecs', 'stopretrysecs', 'stopasgroup',
                      'killasgroup', 'exitcodes', 'redirect_stderr',
                      'environment'):
             defaults[name] = name

@@ -841,6 +841,20 @@ where specified.
 
   *Introduced*: 3.0
 
+``stopretrysecs``
+
+  The number of seconds to wait before retrying the stop signal
+  If this number of seconds elapses before :program:`supervisord`
+  receives a SIGCHLD from the process, :program:`supervisord` will
+  attempt to kill it with another stopsignal. By default it is set
+  to the same value as stopwaitsecs, so no retries will be issued.
+
+  *Default*: 10
+
+  *Required*:  No.
+
+  *Introduced*: ??
+
 ``stopasgroup``
 
   If true, the flag causes supervisor to send the stop signal to the
@@ -1158,6 +1172,7 @@ where specified.
    exitcodes=0
    stopsignal=TERM
    stopwaitsecs=10
+   stopretrysecs=10
    stopasgroup=false
    killasgroup=false
    user=chrism
@@ -1431,6 +1446,7 @@ above constraints and additions.
    stopasgroup=false
    killasgroup=false
    stopwaitsecs=10
+   stopretrysecs=10
    user=chrism
    redirect_stderr=true
    stdout_logfile=/a/path
@@ -1511,6 +1527,7 @@ above constraints and additions.
    exitcodes=0
    stopsignal=QUIT
    stopwaitsecs=10
+   stopretrysecs=10
    stopasgroup=false
    killasgroup=false
    user=chrism

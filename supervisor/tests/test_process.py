@@ -1710,6 +1710,43 @@ class SubprocessTests(unittest.TestCase):
         self.assertEqual(options.kills[1], signal.SIGKILL)
         self.assertEqual(emitted_events, [])
 
+    def test_transition_stops_unkillable_with_stopping_retries(self):
+        from supervisor import events
+        L = []
+        events.subscribe(events.ProcessStateEvent, lambda x: L.append(x))
+        from supervisor.states import ProcessStates
+        options = DummyOptions()
+
+        pconfig = DummyPConfig(options, 'process', 'process','/bin/process', stopretrysecs=2)
+        process = self._makeOne(pconfig)
+        now = time.time()
+        process.delay = now + 5
+        process.delaystoppingretry = now + 1
+        process.pid = 1
+        process.killing = False
+        process.state = ProcessStates.STOPPING
+
+        time.sleep(2)
+        process.transition()
+        time.sleep(2)
+        process.transition()
+        time.sleep(2)
+        process.transition()
+
+        self.assertTrue(process.killing)
+        self.assertNotEqual(process.delay, 0)
+        self.assertNotEqual(process.delaystoppingretry, 0)
+        self.assertEqual(process.state, ProcessStates.STOPPING)
+        self.assertEqual(options.logger.data[0],
+                         "killing 'process' (1) with SIGTERM (retry)")
+        self.assertEqual(options.logger.data[2],
+                         "killing 'process' (1) with SIGTERM (retry)")
+        self.assertEqual(options.logger.data[4],
+                         "killing 'process' (1) with SIGKILL")
+        self.assertEqual(options.kills[1], signal.SIGKILL)
+        self.assertEqual(L, [])
+
+
     def test_change_state_doesnt_notify_if_no_state_change(self):
         options = DummyOptions()
         config = DummyPConfig(options, 'test', '/test')
